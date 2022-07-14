@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:american-flights-api="http://www.mulesoft.org/schema/mule/american-flights-api" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/american-flights-api http://www.mulesoft.org/schema/mule/american-flights-api/current/mule-american-flights-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<american-flights-api:config name="American_Flights_API_Config" doc:name="American Flights API Config" doc:id="e959d792-82d6-458d-9766-27af6c77ee2a" property_host="training4-american-api.cloudhub.io" property_port="80" property_protocol="HTTP"/>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="63854769-3a6d-4685-b74c-1d5dc72e0135" basePath="${training.basepath}" >
+		<http:request-connection host="${training.host}" port="${training.port}" />
+	</http:request-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="8e19ed07-0ca4-4b66-a8f8-633fb5a28c22" >
+		<wsc:connection wsdlLocation="http://mu.learn.mulesoft.com/delta?wsdl" service="TicketServiceService" port="TicketServicePort" address="http://mu.learn.mulesoft.com/delta">
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="3770dff7-e6b0-4e8b-bf12-1d6213722590" file="global.yaml" />
+	<configuration doc:name="Configuration" doc:id="fe86fb11-f9ee-49ae-a517-5fa739518dbd" defaultErrorHandler-ref="globalError_Handler" />
+	<api-gateway:autodiscovery apiId="17944522" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="34731802-34fb-43be-adbe-35ce8212a6f8" flowRef="booking-api-main" />
+	<error-handler name="globalError_Handler" doc:id="d223ded5-7aab-4e2e-8f96-85f5fe75012a" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="83dd50a8-274f-4b83-bec0-e019cc253537" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="e6a65e94-d8b9-43c0-894c-3bd89114991c">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	ErrorDetail: error.description,
+	ErrorType: error.errorType
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+</mule>
